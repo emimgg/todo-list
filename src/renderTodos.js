@@ -1,7 +1,7 @@
 import { createProject } from "./createToDo";
-import { showSelected } from "./showSelectedTodoList";
 import { saveTasks } from "./storage";
 import { ToDo } from "./createToDo.js";
+import { differenceInDays, format, isToday, isTomorrow } from "date-fns";
 
 export function renderComponents(array, parent) {
     parent.innerHTML = "";
@@ -49,7 +49,7 @@ export function renderComponents(array, parent) {
 
             const taskDueDate = document.createElement("span");
             taskDueDate.classList.add("date");
-            taskDueDate.textContent = task.dueDate;
+            taskDueDate.textContent = formatDeadline(task.dueDate);
 
             taskCard.append(taskTitle, taskDetails, taskDueDate);
 
@@ -59,10 +59,9 @@ export function renderComponents(array, parent) {
             const projectDiv = document.createElement("div");
             projectDiv.classList.add("tag-container");
             const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${project.color}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`;
-            projectDiv.innerHTML = svgMarkup; //left here, figure out how to put color
+            projectDiv.innerHTML = svgMarkup; 
             const projectTag = document.createElement("button");
             projectTag.classList.add("project-tag");
-            // projectTag.classList.add(task.priority.toLowerCase());
             projectTag.textContent = project.title;
 
             projectDiv.append(projectTag);
@@ -104,8 +103,12 @@ export function renderComponents(array, parent) {
     });
 }
 
+const LEVELS = ["High", "Medium", "Low"];
+const today = new Date();
+
 export function renderNewTodoForm(array, parent, currentProject) {
-    const LEVELS = ["High", "Medium", "Low"];
+
+    const formattedToday = today.toISOString().split('T')[0];
 
     const todoModal = document.createElement("dialog");
     todoModal.classList.add("form-modal");
@@ -127,6 +130,7 @@ export function renderNewTodoForm(array, parent, currentProject) {
     const dateInput = document.createElement("input");
     dateInput.type = "date";
     dateInput.classList.add("date-input");
+    dateInput.value = formattedToday;
 
     const timeInput = document.createElement("input");
     timeInput.type = "time";
@@ -192,7 +196,10 @@ export function renderNewTodoForm(array, parent, currentProject) {
         const getProjectName = () => {
             let proj = document.querySelector('select[name="projects"]');
             return proj.value;
-        } 
+        }
+
+        const dateAndTime = `${dateInput.value} ${timeInput.value}`;
+        console.log(dateAndTime);
 
         const priority = getPriority();
         const projectName = getProjectName();
@@ -206,7 +213,7 @@ export function renderNewTodoForm(array, parent, currentProject) {
         const task = new ToDo(
             titleInput.value,
             detailsInput.value,
-            dateInput.value,
+            dateAndTime,
             priority
         );
     
@@ -218,6 +225,7 @@ export function renderNewTodoForm(array, parent, currentProject) {
 };
 
 export function renderEditForm(parent, array, projectName, task, currentTab) {
+    const formattedDate = task.dueDate.toISOString().split("T")[0];
     const editModal = document.createElement("dialog");
     editModal.classList.add("form-modal");
 
@@ -238,20 +246,30 @@ export function renderEditForm(parent, array, projectName, task, currentTab) {
     dateLabel.textContent = "Due date:";
     const dateInput = document.createElement("input");
     dateInput.type = "date";
-    dateInput.value = task.dueDate || "";
+    dateInput.value = formattedDate || today;
+
+    const timeInput = document.createElement("input");
+    timeInput.type = "time";
+    timeInput.classList.add("date-input");
 
     const submitEditBtn = document.createElement("button");
     submitEditBtn.type = "submit";
     submitEditBtn.textContent = "Save";
 
-    editForm.append(titleLabel, titleInput, detailsLabel, detailsInput, dateLabel, dateInput, submitEditBtn);
+    editForm.append(titleLabel, titleInput, detailsLabel, detailsInput, dateLabel, dateInput, timeInput, submitEditBtn);
     editModal.appendChild(editForm);
     parent.appendChild(editModal);
     editModal.showModal();
 
+    const dateAndTime = `${dateInput.value} ${timeInput.value}`;
+    console.log(dateAndTime);
+
     editForm.addEventListener("submit", (e) => {
+
+        const dateAndTime = `${dateInput.value} ${timeInput.value}`;
+        console.log(dateAndTime);
         e.preventDefault();
-        saveEdit(array, projectName, task.id, titleInput, detailsInput, dateInput);
+        saveEdit(array, projectName, task.id, titleInput, detailsInput, dateAndTime);
         saveTasks(array);
         editModal.close();
         editModal.remove();
@@ -266,7 +284,7 @@ function saveEdit(array, projectName, taskId, newTitle, newDescription, newDate)
         if (task) {
             task.title = newTitle.value;
             task.description = newDescription.value;
-            task.dueDate = newDate.value;
+            task.dueDate = new Date(newDate);
         } else {
             console.error('Task not found!');
         }
@@ -329,4 +347,31 @@ export function renderProjects(array, nav) {
         itemList.appendChild(listBtn);
         nav.appendChild(itemList);
     })
+}
+
+function formatDeadline(deadline) {
+    const now = new Date();
+
+    let dayText;
+    if (isToday(deadline)) {
+        dayText = "Hoy";
+    } else if (isTomorrow(deadline)) {
+        dayText = "Mañana";
+    } else {
+        const diffDays = differenceInDays(deadline, now);
+        dayText = `En ${diffDays} días`;
+    }
+
+    const timeText = format(deadline, "h:mm a");
+
+    return `${dayText}, ${timeText}`;
+}
+
+export function showSelected(array, listName) {
+    if (listName === "All") {
+        return array;
+    } else {
+        const filteredArray = array.filter(project => project.title === listName);
+        return filteredArray;    
+    }
 }

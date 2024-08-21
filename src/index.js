@@ -1,9 +1,8 @@
 import './style.css';
-import { ToDo, createProject, deleteTodo, toggleTaskIsDone, editTask } from './createToDo.js';
+import { ToDo, createProject, deleteTodo, toggleTaskIsDone, editTask, showSelected } from './createToDo.js';
 import { renderComponents, renderEditForm, renderNewTodoForm, renderProjectForm, renderProjects } from './renderTodos.js'
 import { UI } from "./UI.js";
 import { loadTasks, saveTasks } from './storage.js';
-import { showSelected } from './showSelectedTodoList.js';
 
 const toDos = loadTasks();
 let currentProject = "All";

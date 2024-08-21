@@ -3,10 +3,14 @@ export class ToDo {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.dueDate = dueDate;
+        if (dueDate) {
+        this.dueDate = new Date(dueDate);
+        } else {
+            this.dueDate = "";
+        }
+        
         this.priority = priority;
         this.taskIsDone = false;
-        // this.time = time;
     }
 
 }

@@ -35,7 +35,7 @@ export function loadTasks() {
                 const task = new ToDo(
                     taskData.title,
                     taskData.description,
-                    taskData.dueDate,
+                    new Date(taskData.dueDate),
                     taskData.priority,
                     taskData.id
                 );
