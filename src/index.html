@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo list</title>
+</head>
+<body class="light-bg">
+    <header>
+        <h1>Todo list</h1>
+        <button id="new-todo" class="accent-btn">+ New to do</button>
+    </header>
+    <aside>
+        <nav>
+            <h4 class="tertiary-header">Tasks</h4>
+            <ul>
+                <li class="sidebar-option"><button class="side-project" value="All">All</button></li>
+                <li class="sidebar-option"><button class="side-btn medium-sized">Today</button></li>
+            </ul>
+            <h4 class="tertiary-header">Lists <button class="add-project-btn">+</button></h4>
+            <ul id="projects-sidebar"></ul>
+        </nav>
+    </aside>
+    <div class="container light-bg">
+        <h2 class="tab-name">Today</h2>
+        <div class="content">
+        </div>
+    </div>
+    <dialog id="modal">
+        <form action="post" id="add-todo">
+            <label for="input-title">Title:</label>
+            <input type="text" id="input-title" name="input-title" required>
+    
+            <label for="input-details">Details:</label>
+            <textarea rows="5" id="input-details" name="input-details"></textarea> 
+    
+            <label for="input-date">Due:</label>
+            <input type="date" id="input-date" name="input-date">
+    
+            <label>Select priority:</label>
+
+            <div class="priority-group">
+                <input type="radio" id="priority-high" name="priority" value="high" checked>
+                <label for="priority-high">High</label>
+                
+                <input type="radio" id="priority-medium" name="priority" value="medium">
+                <label for="priority-medium">Medium</label>
+                
+                <input type="radio" id="priority-low" name="priority" value="low">
+                <label for="priority-low">Low</label>
+            </div>
+            
+            <label for="">Project List</label>
+            <select name="projects" id="projects">
+                <option value="Personal">Personal</option>
+                <option value="Work">Work</option>
+                <option value="Pets">Pets</option>
+            </select>
+            <button type="submit">Add</button>
+        </form>
+    </dialog>
+</body>
+</html>
