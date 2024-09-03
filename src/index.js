@@ -1,7 +1,6 @@
 import './style.css';
-import { ToDo, createProject, deleteTodo, toggleTaskIsDone, editTask, showSelected } from './createToDo.js';
-import { renderComponents, renderEditForm, renderNewTodoForm, renderProjectForm, renderProjects } from './renderTodos.js'
-import { UI } from "./UI.js";
+import { ToDo, createProject, deleteTodo, toggleTaskIsDone, editTask } from './objFactory.js';
+import { UI, renderComponents, renderEditForm, renderNewTodoForm, renderProjectForm, renderProjects, showSelected } from './render.js'
 import { loadTasks, saveTasks } from './storage.js';
 
 const toDos = loadTasks();
@@ -79,6 +78,20 @@ document.addEventListener("click", (event) => {
     }
 })
 
+document.querySelector("#sort").addEventListener("change", (event) => {
+    const sortValue = event.target.value;
+    let sortedTasks;
+
+    if (sortValue === "date") {
+        sortedTasks = sortByDueDateAscending(toDos);
+    } else if (sortValue === "date-desc") {
+        sortedTasks = sortByDueDateDescending(toDos);
+    }
+
+    renderComponents(showSelected(sortedTasks, currentProject), UI.contentDiv);
+});
+
+//ONLY RENDER THEM BY DATE, DONT REARRANGE
 // update sidebar display with projects DONE
 // Assign default project to Personal ###
 // edit and delete projects ###

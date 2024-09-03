@@ -1,105 +1,135 @@
-import { createProject } from "./createToDo";
-import { saveTasks } from "./storage";
-import { ToDo } from "./createToDo.js";
+import { createProject } from "./objFactory.js";
+import { saveTasks } from "./storage.js";
+import { ToDo } from "./objFactory.js";
 import { differenceInDays, format, isToday, isTomorrow } from "date-fns";
 
+export const UI = (() => {
+    const newToDoBtn = document.querySelector("#new-todo");
+    const contentDiv = document.querySelector(".content");
+    const modal = document.querySelector("#modal");
+    const toDoForm = document.querySelector("#add-todo");
+    const titleInput = document.querySelector("#input-title");
+    const detailsInput = document.querySelector("#input-details");
+    const dateInput = document.querySelector("#input-date");
+    const sideNav = document.querySelector("#projects-sidebar");
+
+    const getSelectedPriority = () => {
+        const selected = document.querySelector('input[name="priority"]:checked');
+        return selected ? selected.value : null;
+    };
+
+    const getSelectedProject = () => {
+        const selectElement = document.querySelector('select[name="projects"]');
+        return selectElement.value; 
+    };
+
+    return {
+        newToDoBtn,
+        contentDiv,
+        modal,
+        toDoForm,
+        titleInput,
+        detailsInput,
+        dateInput,
+        sideNav,
+        getSelectedProject,
+        getSelectedPriority
+    };
+})();
+
 export function renderComponents(array, parent) {
-    parent.innerHTML = "";
-    const projects = []
+    parent.innerHTML = ""; // Clear existing content
+    
+    // Flatten the tasks from all projects into a single array
+    const tasks = array.flatMap(project => project.getTasks());
 
-    array.forEach(project => {
+    tasks.forEach(task => {
+        const taskDiv = document.createElement("div");
+        taskDiv.classList.add("todo-item");
+        
+        if (task.priority === "High") {
+            taskDiv.classList.add("red-bg");
+        } else if (task.priority === "Medium") {
+            taskDiv.classList.add("orange-bg"); 
+        } else {
+            taskDiv.classList.add("yellow-bg");
+        }
 
-        projects.push(project);
+        const checkboxContainer = document.createElement("label");
+        checkboxContainer.classList.add("checkbox-container");
 
-        project.getTasks().forEach(task => {
+        const taskCheckbox = document.createElement("input");
+        taskCheckbox.type = "checkbox";
+        taskCheckbox.classList.add("checkbox-input");
+        taskCheckbox.dataset.key = task.id;
+        taskCheckbox.checked = task.taskIsDone;
 
-            const taskDiv = document.createElement("div");
-            taskDiv.classList.add("todo-item");
-            if (task.priority === "High") {
-                taskDiv.classList.add("red-bg")
-            } else if (task.priority === "Medium") {
-                taskDiv.classList.add("orange-bg") 
-            } else {
-                taskDiv.classList.add("yellow-bg");
-            }
-            const checkboxContainer = document.createElement("label");
-            checkboxContainer.classList.add("checkbox-container");
+        const checkbox = document.createElement("span");
+        checkbox.classList.add("checkbox");
 
-            const taskCheckbox = document.createElement("input");
-            taskCheckbox.type = "checkbox";
-            taskCheckbox.classList.add("checkbox-input");
-            taskCheckbox.dataset.key = task.id;
-            taskCheckbox.checked = task.taskIsDone;
+        checkboxContainer.append(taskCheckbox, checkbox);
 
-            const checkbox = document.createElement("span");
-            checkbox.classList.add("checkbox");
+        const taskCard = document.createElement("article");
+        taskCard.classList.add("to-do");
 
-            checkboxContainer.append(taskCheckbox, checkbox);
+        const taskTitle = document.createElement("h4");
+        taskTitle.classList.add("todo-title");
+        taskTitle.textContent = task.title;
 
-            const taskCard = document.createElement("article");
-            taskCard.classList.add("to-do");
+        const taskDetails = document.createElement("p");
+        taskDetails.classList.add("todo-description");
+        taskDetails.textContent = task.description;
 
-            const taskTitle = document.createElement("h4");
-            taskTitle.classList.add("todo-title");
-            taskTitle.textContent = task.title;
+        const taskDueDate = document.createElement("span");
+        taskDueDate.classList.add("date");
+        taskDueDate.textContent = formatDeadline(task.dueDate);
 
-            const taskDetails = document.createElement("p");
-            taskDetails.classList.add("todo-description");
-            taskDetails.textContent = task.description;
+        taskCard.append(taskTitle, taskDetails, taskDueDate);
 
-            const taskDueDate = document.createElement("span");
-            taskDueDate.classList.add("date");
-            taskDueDate.textContent = formatDeadline(task.dueDate);
+        const taskDivRight = document.createElement("div");
+        taskDivRight.classList.add("todo-item-rightside");
 
-            taskCard.append(taskTitle, taskDetails, taskDueDate);
+        const projectDiv = document.createElement("div");
+        projectDiv.classList.add("tag-container");
+        const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${task.color}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`;
+        projectDiv.innerHTML = svgMarkup; 
 
-            const taskDivRight = document.createElement("div");
-            taskDivRight.classList.add("todo-item-rightside");
+        const projectTag = document.createElement("button");
+        projectTag.classList.add("project-tag");
+        projectTag.textContent = task.project;
 
-            const projectDiv = document.createElement("div");
-            projectDiv.classList.add("tag-container");
-            const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${project.color}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`;
-            projectDiv.innerHTML = svgMarkup; 
-            const projectTag = document.createElement("button");
-            projectTag.classList.add("project-tag");
-            projectTag.textContent = project.title;
+        projectDiv.append(projectTag);
 
-            projectDiv.append(projectTag);
+        const expandBtn = document.createElement("button");
+        expandBtn.classList.add("expand-btn");
+        expandBtn.textContent = "expandir";
 
-            const expandBtn = document.createElement("button");
-            expandBtn.classList.add("expand-btn");
-            expandBtn.textContent = "expandir";
+        const deleteBtn = document.createElement("button");
+        deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2 delete" data-key="${task.id}"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+        deleteBtn.classList.add("delete");
+        deleteBtn.dataset.key = task.id;
 
-            const deleteBtn = document.createElement("button");
-            deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2 delete" data-key="${task.id}"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
-            deleteBtn.classList.add("delete");
-            deleteBtn.dataset.key = task.id;
-
-            const editBtn = document.createElement("button");
-            editBtn.classList.add("edit");
-            editBtn.textContent = "Edit";
-            editBtn.dataset.key = task.id;
-            editBtn.dataset.project = project.title; // Set project name
-
-            expandBtn.addEventListener('click', () => {
-                taskDiv.classList.toggle("expanded");
-                expandBtn.textContent = taskDiv.classList.contains("expanded") ? "Collapse" : "expandir";
-            });
-
-            if (task.taskIsDone) {
-                taskDiv.classList.add("done");
-                expandBtn.classList.add("hide");
-            } else {
-                taskDiv.classList.remove("done");
-                expandBtn.classList.remove("hide");
-                // priorityText.classList.add(`${task.priority}`);
-            }
-
-
-            taskDivRight.append(projectDiv, deleteBtn, editBtn, expandBtn);
-            taskDiv.append(checkboxContainer, taskCard, taskDivRight);
-            parent.appendChild(taskDiv);
+        const editBtn = document.createElement("button");
+        editBtn.classList.add("edit");
+        editBtn.textContent = "Edit";
+        editBtn.dataset.key = task.id;
+        editBtn.dataset.project = task.id; 
+        expandBtn.addEventListener('click', () => {
+            taskDiv.classList.toggle("expanded");
+            expandBtn.textContent = taskDiv.classList.contains("expanded") ? "Collapse" : "expandir";
         });
+
+        if (task.taskIsDone) {
+            taskDiv.classList.add("done");
+            expandBtn.classList.add("hide");
+        } else {
+            taskDiv.classList.remove("done");
+            expandBtn.classList.remove("hide");
+        }
+
+        taskDivRight.append(projectDiv, deleteBtn, editBtn, expandBtn);
+        taskDiv.append(checkboxContainer, taskCard, taskDivRight);
+        parent.appendChild(taskDiv);
     });
 }
 

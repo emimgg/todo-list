@@ -1,4 +1,4 @@
-import { ToDo, createProject } from './createToDo.js';
+import { ToDo, createProject } from './objFactory.js';
 
 // Save only the data in localStorage, not methods
 export function saveTasks(tasks) {
@@ -13,7 +13,7 @@ export function saveTasks(tasks) {
                 dueDate: task.dueDate,
                 priority: task.priority,
                 taskIsDone: task.taskIsDone,
-                // Add other task properties here if needed
+                project: task.project,
             }))
         }));
         localStorage.setItem("tasks", JSON.stringify(data));
@@ -37,6 +37,7 @@ export function loadTasks() {
                     taskData.description,
                     new Date(taskData.dueDate),
                     taskData.priority,
+                    taskData.project,
                     taskData.id
                 );
                 task.taskIsDone = taskData.taskIsDone;

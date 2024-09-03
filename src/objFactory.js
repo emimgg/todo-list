@@ -1,18 +1,13 @@
 export class ToDo {
-    constructor(title, description, dueDate, priority, id = Date.now()) {
+    constructor(title, description, dueDate, priority, project, id = Date.now()) {
         this.id = id;
         this.title = title;
         this.description = description;
-        if (dueDate) {
-        this.dueDate = new Date(dueDate);
-        } else {
-            this.dueDate = "";
-        }
-        
+        this.dueDate = dueDate ? new Date(dueDate) : "";
         this.priority = priority;
         this.taskIsDone = false;
+        this.project = project;  // Add this line
     }
-
 }
 
 export function createProject(title, color) {
@@ -21,6 +16,8 @@ export function createProject(title, color) {
         color,
         tasks: [],
         addTask(task) {
+            task.project = this.title;
+            task.color = this.color;
             this.tasks.push(task);
         },
         getTasks() {
@@ -60,4 +57,11 @@ export function editTask(task, newTitle, newDescription, newDate, newPriority) {
         task.dueDate = newDate;
         task.priority = newPriority;
     }
+}
+
+function sortByDueDateAscending(array) {
+    return array.map(project => ({
+        ...project,
+        tasks: project.getTasks().sort((a, b) => compareAsc(a.dueDate, b.dueDate))
+    }));
 }
